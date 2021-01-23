@@ -173,16 +173,19 @@ def desinfectGrain():
         currentProfit -= currentExpense
 def dispatchGrain():
     global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag, taxeGrain
+    currentIncome = 0
+    currentExpense = taxes
+    currentProfit = currentIncome - currentExpense
     if malfunctions['dispatching'] == False:
         currentDispatched = min(goodGrain,exportAmount)
         goodGrain -= currentDispatched
-        currentIncome += currentDispatched * grainKgCost
-        currentExpense += taxes
-        currentProfit += currentIncome - currentExpense
+        currentIncome = currentDispatched * grainKgCost
+        currentExpense = taxes
+        currentProfit = currentIncome - currentExpense
     if flag == 1:
         flag = 0
-        currentExpense = 10000 + taxeGrain
-        currentProfit = currentExpense
+        currentExpense += 10000 + taxeGrain
+        currentProfit -= currentExpense
     elif flag == 2:
         flag = 0
         currentExpense += 500
