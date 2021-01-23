@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas, Button, Label, Entry
+from tkinter import Tk, Canvas, Button, Label, Entry, messagebox
 import random, time, math
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -27,7 +27,7 @@ goodGrain = 0
 badGrain = 0
 
 iters = 0
-
+taxeGrain = 0
 flag = 0
 
 malfunctions = {'recieving': False,
@@ -57,11 +57,11 @@ window.resizable(0, 0)
 
 
 
-fig = plt.figure(figsize = (4,4),frameon = False)
+fig = plt.figure(figsize = (7,4),frameon = False)
 fig.patch.set_facecolor('snow')
 ax1 = fig.add_subplot(1, 1, 1)
 
-tableFig = plt.figure(figsize = (8,4),frameon = False)
+tableFig = plt.figure(figsize = (8,4.5),frameon = False)
 tableFig.patch.set_facecolor('snow')
 tableFig.patch.set_visible(False)
 ax2 = tableFig.add_subplot()
@@ -93,54 +93,57 @@ def recieveGrain(event):
     currentIncome = 0
     currentExpense = taxes
     currentProfit = currentIncome - currentExpense
-    if flag == 1:
-        flag = 0
-        currentExpense += 10000 + badGrain
-        currentProfit -= currentExpense
     if malfunctions['recieving'] == False:
         currentRecieved = 1000
         if (recievedGrain + currentRecieved < MAX_CAPACITY):
             recievedGrain += currentRecieved
-            getGrainAmountText.config(text = "{0} / {1}".format(recievedGrain, MAX_CAPACITY))
+            getGrainAmountText.config(text = "{0} / {1} kg".format(recievedGrain, MAX_CAPACITY))
             fillBox(elevatorCanvas, gettinGraingBox, math.floor(recievedGrain / MAX_CAPACITY * 100))
         else:
             print("Error: no more place to storage recieved grain")
     else:
         print("Error: malfunction in recieving storage!")
+    if flag == 1:
+        flag = 0
+        currentExpense += 10000 + taxeGrain
+        currentProfit -= currentExpense
+    elif flag == 2:
+        flag = 0
+        currentExpense += 500
+        currentProfit -= currentExpense
 
 def cleanGrain():
     global recievedGrain, cleanedGrain, currentProfit, currentExpense, currentIncome, flag
     currentIncome = 0
     currentExpense = taxes
     currentProfit = currentIncome - currentExpense
-    if flag == 1:
-        flag = 0
-        currentExpense += 10000 + badGrain
-        currentProfit -= currentExpense
     if malfunctions['cleaning'] == False:
         currentCleaned = min(600,recievedGrain)
         if (cleanedGrain + currentCleaned < MAX_CAPACITY):
             recievedGrain -= currentCleaned
             cleanedGrain += currentCleaned
-            getGrainAmountText.config(text = "{0} / {1}".format(recievedGrain, MAX_CAPACITY))
-            cleaningGrainAmountText.config(text = "{0} / {1}".format(cleanedGrain, MAX_CAPACITY))
+            getGrainAmountText.config(text = "{0} / {1} kg".format(recievedGrain, MAX_CAPACITY))
+            cleaningGrainAmountText.config(text = "{0} / {1} kg".format(cleanedGrain, MAX_CAPACITY))
             fillBox(elevatorCanvas, gettinGraingBox, math.floor(recievedGrain / MAX_CAPACITY * 100))
             fillBox(elevatorCanvas, cleaningGrainBox, math.floor(cleanedGrain / MAX_CAPACITY * 100))
         else:
             print("Error: no more place to storage clean grain")
     else:
-
         print("Error: malfunction in cleaning storage!")
+    if flag == 1:
+        flag = 0
+        currentExpense += 10000 + taxeGrain
+        currentProfit -= currentExpense
+    elif flag == 2:
+        flag = 0
+        currentExpense += 500
+        currentProfit -= currentExpense
 
 def desinfectGrain():
     global cleanedGrain, goodGrain, badGrain, currentProfit, currentExpense, currentIncome, flag
     currentIncome = 0
     currentExpense = taxes
     currentProfit = currentIncome - currentExpense
-    if flag == 1:
-        flag = 0
-        currentExpense += 10000 + badGrain
-        currentProfit -= currentExpense
     if malfunctions['desinfecting'] == False:
         currentDesinfected = min(500,cleanedGrain)
         badPart = currentDesinfected * round(random.uniform(0.01,0.05),3)  #в процессе может отсеятся от 1.0% до 5.0% зерна
@@ -148,9 +151,9 @@ def desinfectGrain():
             cleanedGrain -= currentDesinfected
             goodGrain += currentDesinfected - badPart
             badGrain += badPart
-            cleaningGrainAmountText.config(text = "{0} / {1}".format(cleanedGrain, MAX_CAPACITY))
-            goodGrainAmountText.config(text = "{0} / {1}".format(goodGrain, MAX_CAPACITY))
-            badGrainAmountText.config(text = "{0} / 500".format(badGrain))
+            cleaningGrainAmountText.config(text = "{0} / {1} kg".format(cleanedGrain, MAX_CAPACITY))
+            goodGrainAmountText.config(text = "{0} / {1} kg".format(goodGrain, MAX_CAPACITY))
+            badGrainAmountText.config(text = "{0} / 500 kg".format(badGrain))
             fillBox(elevatorCanvas, cleaningGrainBox, math.floor(cleanedGrain / MAX_CAPACITY * 100))
             fillBox(elevatorCanvas, goodGrainBox, math.floor(goodGrain / MAX_CAPACITY * 100))
             fillBox(elevatorCanvas, badGrainBox, math.floor(badGrain / 500 * 100))
@@ -160,22 +163,30 @@ def desinfectGrain():
             print("Error: no more place to storage bad grain")
     else:
         print("Error: malfunction in recieving storage!")
-
-def dispatchGrain():
-    global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag
     if flag == 1:
-        currentExpense = 10000 + badGrain
-        currentProfit = currentExpense
-    else:
-        currentIncome = 0
-        currentExpense = 0
-        currentProfit = 0
+        flag = 0
+        currentExpense += 10000 + taxeGrain
+        currentProfit -= currentExpense
+    elif flag == 2:
+        flag = 0
+        currentExpense += 500
+        currentProfit -= currentExpense
+def dispatchGrain():
+    global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag, taxeGrain
     if malfunctions['dispatching'] == False:
         currentDispatched = min(goodGrain,exportAmount)
         goodGrain -= currentDispatched
         currentIncome += currentDispatched * grainKgCost
         currentExpense += taxes
         currentProfit += currentIncome - currentExpense
+    if flag == 1:
+        flag = 0
+        currentExpense = 10000 + taxeGrain
+        currentProfit = currentExpense
+    elif flag == 2:
+        flag = 0
+        currentExpense += 500
+        currentProfit -= currentExpense
 
 ##################################################################################
 
@@ -234,9 +245,10 @@ def fillBox(can, box, percent):   #Нужно указать канвас в к�
         can.coords(massivBox[j],coordsBox) #
 
 def clearBadBox(event):
-    global totalExpense, badGrain, currentExpense, currentProfit, flag
+    global totalExpense, badGrain, currentExpense, currentProfit, flag, taxeGrain
     blinkArrow(elevatorCanvas, [badGrainArrowToExport], "green")
     flag = 1
+    taxeGrain = badGrain
     badGrain = 0
     fillBox(elevatorCanvas, badGrainBox, 0)
 
@@ -257,7 +269,7 @@ arrowCoordinates = [
                     105, 160,
                              ]
 
-canvasLabel = Canvas(window, width = 150, height = 150, bg = 'snow')
+canvasLabel = Canvas(window, width = 150, height = 50, bg = 'snow')
 
 totalIncomeText = Label(canvasLabel, text = currentIncome, font=("arial", 10), bg="snow", anchor = "w", width=30)
 totalExpenceText = Label(canvasLabel, text = currentExpense, font=("arial", 10), bg="snow", anchor = "w", width=30)
@@ -268,10 +280,17 @@ totalIncomeText.grid(row = 0,column = 0)
 totalExpenceText.grid(row = 1,column = 0)
 totalProfitText.grid(row = 2,column = 0)
 
-canvasLabel.place(x = 10, y = 10)
+canvasLabel.place(x = 0, y = 10)
 
-elevatorCanvas = Canvas(window, width = 780, height = 300, bg = "snow", highlightthickness = 0)
+elevatorCanvas = Canvas(window, width = 780, height = 305, bg = "snow", highlightthickness = 0)
 elevatorCanvas.place(x = 500, y = 0)
+
+gettinGrainButtonCanvas = Canvas(window, width = 150, height = 10)
+gettinGrainButtonCanvas.place(x = 350, y = 135)
+
+gettinGrainButton = Button(gettinGrainButtonCanvas, text = "Add 1000 Grain", width = 20, height = 2, bg = "Black",foreground = "white")
+gettinGrainButton.pack(side = "left")
+gettinGrainButton.bind(sequence = "<Button-1>", func = recieveGrain)
 
 gettinGraingBox = elevatorCanvas.create_rectangle(10, 30, 100, 280)
 getGrainBoxText = Label(elevatorCanvas, text = "Принятое зерно", bg = "snow")
@@ -279,31 +298,31 @@ getGrainBoxText.place(x = 8, y = 5)
 
 getToCleanArrow = elevatorCanvas.create_polygon(arrowCoordinates, fill = "snow", outline = "black")
 
-getGrainAmountText = Label(elevatorCanvas, text = "{0} / {1}".format(recievedGrain, MAX_CAPACITY), width = 10, bg = "snow")
+getGrainAmountText = Label(elevatorCanvas, text = "{0} / {1} kg".format(recievedGrain, MAX_CAPACITY), width = 12, bg = "snow")
 getGrainAmountText.place(x = 15, y = 285)
 
 cleaningGrainBox = elevatorCanvas.create_rectangle(160, 30, 250, 280)
 cleanGrainBoxText = Label(elevatorCanvas, text = "Очищенное зерно", bg = "snow")
 cleanGrainBoxText.place(x = 152, y = 5)
 
-cleaningGrainAmountText = Label(elevatorCanvas, text = "{0} / {1}".format(cleanedGrain, MAX_CAPACITY), width = 10, bg = "snow")
+cleaningGrainAmountText = Label(elevatorCanvas, text = "{0} / {1} kg".format(cleanedGrain, MAX_CAPACITY), width = 12, bg = "snow")
 cleaningGrainAmountText.place(x = 168, y = 285)
 
-disinfectionToGoodGrainArrow = elevatorCanvas.create_polygon(arrowMove(arrowCoordinates, 150, -75), fill = "snow", outline = "black")
-disinfectionToBadGrainArrow = elevatorCanvas.create_polygon(arrowMove(arrowCoordinates, 0, 150), fill = "snow", outline = "black")
+desinfectionToGoodGrainArrow = elevatorCanvas.create_polygon(arrowMove(arrowCoordinates, 150, -75), fill = "snow", outline = "black")
+desinfectionToBadGrainArrow = elevatorCanvas.create_polygon(arrowMove(arrowCoordinates, 0, 150), fill = "snow", outline = "black")
 
 goodGrainBox = elevatorCanvas.create_rectangle(310, 30, 560, 130)
 goodGrainBoxText = Label(elevatorCanvas, text = "Хорошее зерно", bg = "snow")
 goodGrainBoxText.place(x = 396, y = 5)
 
-goodGrainAmountText = Label(elevatorCanvas, text = "{0} / {1}".format(goodGrain, MAX_CAPACITY), width = 10, bg = "snow")
+goodGrainAmountText = Label(elevatorCanvas, text = "{0} / {1} kg".format(goodGrain, MAX_CAPACITY), width = 12, bg = "snow")
 goodGrainAmountText.place(x = 405, y = 135)
 
 badGrainBox = elevatorCanvas.create_rectangle(310, 180, 560, 280)
 badGrainBoxText = Label(elevatorCanvas, text = "Плохое зерно", bg = "snow")
 badGrainBoxText.place(x = 400, y = 155)
 
-badGrainAmountText = Label(elevatorCanvas, text = "{0} / 500".format(badGrain), width = 8, bg = "snow")
+badGrainAmountText = Label(elevatorCanvas, text = "{0} / 500 kg".format(badGrain), width = 10, bg = "snow")
 badGrainAmountText.place(x = 405, y = 285)
 
 goodGrainArrowToExport = elevatorCanvas.create_polygon(arrowMove(arrowCoordinates, 310, -150), fill = "snow", outline = "black")
@@ -370,99 +389,177 @@ def drawTable(profitTable):
     ax2.axis('tight')
     tableFig.canvas.draw()
 #################################################################################
+def breakingCleaning(event):
+    global malfunctions
+    malfunctions['cleaning'] = True
 
+def repairingCleaning(event):
+    global malfunctions
+    malfunctions['cleaning'] = False
+
+def breakingDesinfecting(event):
+    global malfunctions
+    malfunctions['desinfecting'] = True
+
+def repairingDesinfecting(event):
+    global malfunctions
+    malfunctions['desinfecting'] = False
+
+def breakingDispatching(event):
+    global malfunctions
+    malfunctions['dispatching'] = True
+
+def repairingDispatching(event):
+    global malfunctions
+    malfunctions['dispatching'] = False
+
+def makeError(event):
+    global flag
+    flag = 3
+def syserror():
+        global flag
+        messagebox.showerror(
+            "System malfunction",
+            "Press OK to fix system (500$)")
+        flag = 2
 ################################ Кнопки #########################################
 
-canButton = Canvas(window, width = 20, height = 20)
-canButton.place(x = 10, y = 200)
+canButtons = Canvas(window, width = 300, height = 250, bg = "snow", highlightthickness = 0)
+canButtons.place(x = 0, y = 100)
 
-errorText = Label(window, text = "", bg = "snow")
-errorText.place(x = 10, y = 250)
+canCleaningButton = Canvas(canButtons, width = 300, height = 1, bg = "snow", highlightthickness = 0)
+canCleaningButton.place(x = 0, y = 0)
 
-addGrainButton = Button(canButton, text = "Add 1000 Grain", width = 25, height = 2, bg = "Black",foreground = "white")
-addGrainButton.pack(side = "left")
-addGrainButton.bind(sequence = "<Button-1>", func = recieveGrain)
+canDesinfectingButton = Canvas(canButtons, width = 300, height = 1, bg = "snow", highlightthickness = 0)
+canDesinfectingButton.place(x = 0, y = 50)
 
+canDispatchingingButton = Canvas(canButtons, width = 300, height = 1, bg = "snow", highlightthickness = 0)
+canDispatchingingButton.place(x = 0, y = 100)
+
+breakingCleaningButton = Button(canCleaningButton, text = "Очистка не работает", width = 20, height = 1, bg = "Black",foreground = "white")
+breakingCleaningButton.pack(side = 'left')
+breakingCleaningButton.bind(sequence = "<Button-1>", func = breakingCleaning)
+
+repairingCleaningButton = Button(canCleaningButton, text = "Очистка работает", width = 20, height = 1, bg = "Black",foreground = "white")
+repairingCleaningButton.pack(side = 'right')
+repairingCleaningButton.bind(sequence = "<Button-1>", func = repairingCleaning)
+
+breakingDesinfectingButton = Button(canDesinfectingButton, text = "Дизенфекция не работает", width = 20, height = 1, bg = "Black",foreground = "white")
+breakingDesinfectingButton.pack(side = 'left')
+breakingDesinfectingButton.bind(sequence = "<Button-1>", func = breakingDesinfecting)
+
+repairingDesinfectingButton = Button(canDesinfectingButton, text = "Дизенфекция работает", width = 20, height = 1, bg = "Black",foreground = "white")
+repairingDesinfectingButton.pack(side = 'right')
+repairingDesinfectingButton.bind(sequence = "<Button-1>", func = repairingDesinfecting)
+
+breakingDispatchingButton = Button(canDispatchingingButton, text = "Отправка не работает", width = 20, height = 1, bg = "Black",foreground = "white")
+breakingDispatchingButton.pack(side = 'left')
+breakingDispatchingButton.bind(sequence = "<Button-1>", func = breakingDispatching)
+
+repairingDispatchingButton = Button(canDispatchingingButton, text = "Отправка работает", width = 20, height = 1, bg = "Black",foreground = "white")
+repairingDispatchingButton.pack(side = 'right')
+repairingDispatchingButton.bind(sequence = "<Button-1>", func = repairingDispatching)
+
+canStopSystemButton = Canvas(window, width = 200, height = 300, bg = "snow", highlightthickness = 0)
+canStopSystemButton.place(x = 1300, y = 125)
+
+stopSystemButton = Button(canStopSystemButton, text = 'System \n Stop', width = 10, height = 2, bg = "red",foreground = "white")
+stopSystemButton.pack(side = 'bottom')
+stopSystemButton.bind(sequence="<Button-1>", func = makeError)
 #################################################################################
 
 def progress():
-    global currentStage, iters, totalIncome, totalExpense, totalProfit
-
-    if currentStage == STAGE_CLEANING:
-        iters += 1
-        cleanGrain()
-        getStats()
-
-        if (recievedGrain != 0):
-            blinkArrow(elevatorCanvas, [getToCleanArrow], "green")
-        currentStage+=1
+    global currentStage, iters, totalIncome, totalExpense, totalProfit, goodGrain, badGrain, flag
+    if flag == 3:
+        syserror()
+        flag = 2
         elevatorCanvas.after(INTERVAL,progress)
+    else:
+        if currentStage == STAGE_CLEANING:
+            iters += 1
+            cleanGrain()
+            getStats()
 
-    elif currentStage == STAGE_DESINFECTING:
-        desinfectGrain()
-        getStats()
-        if (cleanedGrain != 0):
-            blinkArrow(elevatorCanvas, [disinfectionToGoodGrainArrow,
-                                        disinfectionToBadGrainArrow], "green")
-        if iters % DISPATCH_DELAY == 0:                                 #когда проходит нужное количество дней до отправки
+            if (recievedGrain != 0):
+                if malfunctions['cleaning'] == False:
+                    blinkArrow(elevatorCanvas, [getToCleanArrow], "green")
+                else:
+                    blinkArrow(elevatorCanvas, [getToCleanArrow], "red")
             currentStage+=1
             elevatorCanvas.after(INTERVAL,progress)
-        else:                                                           #иначе начинаем новый цикл сразу
+
+        elif currentStage == STAGE_DESINFECTING:
+            desinfectGrain()
+            getStats()
+            if (cleanedGrain != 0):
+                if malfunctions['desinfecting'] == False:
+                    blinkArrow(elevatorCanvas, [desinfectionToGoodGrainArrow,
+                                                desinfectionToBadGrainArrow], "green")
+                else:
+                    blinkArrow(elevatorCanvas, [desinfectionToGoodGrainArrow,
+                                                desinfectionToBadGrainArrow], "red")
+            if iters % DISPATCH_DELAY == 0:                                 #когда проходит нужное количество дней до отправки
+                currentStage+=1
+                elevatorCanvas.after(INTERVAL,progress)
+            else:                                                           #иначе начинаем новый цикл сразу
+                currentStage = STAGE_CLEANING
+                profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, round(goodGrain, 1) , round(badGrain, 1)])
+                elevatorCanvas.after(INTERVAL,progress)
+
+
+        elif currentStage == STAGE_DISPATCHING:
+            dispatchGrain()
+            getStats()
+            if malfunctions['dispatching'] == False:
+                blinkArrow(elevatorCanvas, [goodGrainArrowToExport], "green")
+            else:
+                blinkArrow(elevatorCanvas, [goodGrainArrowToExport], "red")
             currentStage = STAGE_CLEANING
-            profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, goodGrain, badGrain])
+            profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, round(goodGrain, 1), round(badGrain, 1)])
             elevatorCanvas.after(INTERVAL,progress)
 
-
-    elif currentStage == STAGE_DISPATCHING:
-        dispatchGrain()
-        getStats()
-        blinkArrow(elevatorCanvas, [goodGrainArrowToExport], "green")
-        currentStage = STAGE_CLEANING
-        profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, goodGrain, badGrain])
-        elevatorCanvas.after(INTERVAL,progress)
-
-    totalIncome += currentIncome
-    totalExpense += currentExpense
-    totalProfit += currentProfit
+        totalIncome += currentIncome
+        totalExpense += currentExpense
+        totalProfit += currentProfit
 
 
 
-    if (iters == kek[(len(kek)) - 1][0]):
-        kek[(len(kek)) - 1] = [iters,totalProfit]
-    else:
-        kek.append([iters,totalProfit])
+        if (iters == kek[(len(kek)) - 1][0]):
+            kek[(len(kek)) - 1] = [iters,totalProfit]
+        else:
+            kek.append([iters,totalProfit])
 
-        if len(kek) > 15:               #максимальный размер массива
-            del kek[0]
-        if len(profitTable) > 10:       #максимальный размер таблицы
-            del profitTable[0]
-        drawGraph(kek)
-        drawTable(profitTable)
+            if len(kek) > 15:               #максимальный размер массива
+                del kek[0]
+            if len(profitTable) > 10:       #максимальный размер таблицы
+                del profitTable[0]
+            drawGraph(kek)
+            drawTable(profitTable)
 
-    totalIncomeText.config(text = 'Total Income = ' + str(totalIncome) + '$')
-    totalExpenceText.config(text = 'Total Expense = ' + str(totalExpense) + '$')
-    totalProfitText.config(text = 'Total Profit = ' + str(totalProfit) + '$')
+        totalIncomeText.config(text = 'Total Income = ' + str(totalIncome) + '$')
+        totalExpenceText.config(text = 'Total Expense = ' + str(totalExpense) + '$')
+        totalProfitText.config(text = 'Total Profit = ' + str(totalProfit) + '$')
 
-    print(totalIncome)
-    print(totalExpense)
-    print(totalProfit)
+        print(totalIncome)
+        print(totalExpense)
+        print(totalProfit)
 
-    timeGoodExportText.config(text = "Через {0} дн.".format(str(abs(iters % DISPATCH_DELAY % (-1*DISPATCH_DELAY)))))
-    print()
+        timeGoodExportText.config(text = "Через {0} дн.".format(str(abs(iters % DISPATCH_DELAY % (-1*DISPATCH_DELAY)))))
+        print()
 ##################################################################################
 
 canGraph = Canvas(window, width = 780, height = 600)
-canGraph.place(x = 880, y = 300)
+canGraph.place(x = 800, y = 305)
 canvasGraph = FigureCanvasTkAgg(fig, canGraph)
 canvasGraph.get_tk_widget().config(bg = 'snow')
 canvasGraph.get_tk_widget().grid(column=0,row=0)
 
-canTable = Canvas(window, width = 100, height = 600)
-canTable.place(x = 0, y = 300)
+canTable = Canvas(window, width = 300, height = 600)
+canTable.place(x = 0, y = 305)
 canvasTable = FigureCanvasTkAgg(tableFig, canTable)
 canvasTable.get_tk_widget().config(bg = 'snow')
 canvasTable.get_tk_widget().grid(column=0, row=0, sticky='nsew')
 
 elevatorCanvas.after(0,progress)
-window.geometry('1280x720')
+window.geometry('1480x720')
 window.mainloop()
