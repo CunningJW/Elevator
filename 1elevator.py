@@ -89,7 +89,7 @@ def getStats():
     print("")
 
 def recieveGrain(event):
-    global recievedGrain, currentProfit, currentExpense, flag
+    global recievedGrain, currentProfit, currentExpense, currentIncome, flag, taxeGrain, taxes
     currentIncome = 0
     currentExpense = taxes
     currentProfit = currentIncome - currentExpense
@@ -113,7 +113,7 @@ def recieveGrain(event):
         currentProfit -= currentExpense
 
 def cleanGrain():
-    global recievedGrain, cleanedGrain, currentProfit, currentExpense, currentIncome, flag
+    global recievedGrain, cleanedGrain, currentProfit, currentExpense, currentIncome, flag, taxeGrain, taxes
     currentIncome = 0
     currentExpense = taxes
     currentProfit = currentIncome - currentExpense
@@ -140,7 +140,7 @@ def cleanGrain():
         currentProfit -= currentExpense
 
 def desinfectGrain():
-    global cleanedGrain, goodGrain, badGrain, currentProfit, currentExpense, currentIncome, flag
+    global cleanedGrain, goodGrain, badGrain, currentProfit, currentExpense, currentIncome, flag, taxeGrain, taxes
     currentIncome = 0
     currentExpense = taxes
     currentProfit = currentIncome - currentExpense
@@ -172,7 +172,7 @@ def desinfectGrain():
         currentExpense += taxes * 2
         currentProfit -= currentExpense
 def dispatchGrain():
-    global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag, taxeGrain
+    global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag, taxeGrain, taxes
     currentIncome = 0
     currentExpense = taxes
     currentProfit = currentIncome - currentExpense
