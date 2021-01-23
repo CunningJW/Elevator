@@ -109,7 +109,7 @@ def recieveGrain(event):
         currentProfit -= currentExpense
     elif flag == 2:
         flag = 0
-        currentExpense += 500
+        currentExpense += taxes * 2
         currentProfit -= currentExpense
 
 def cleanGrain():
@@ -136,7 +136,7 @@ def cleanGrain():
         currentProfit -= currentExpense
     elif flag == 2:
         flag = 0
-        currentExpense += 500
+        currentExpense += taxes * 2
         currentProfit -= currentExpense
 
 def desinfectGrain():
@@ -169,7 +169,7 @@ def desinfectGrain():
         currentProfit -= currentExpense
     elif flag == 2:
         flag = 0
-        currentExpense += 500
+        currentExpense += taxes * 2
         currentProfit -= currentExpense
 def dispatchGrain():
     global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag, taxeGrain
@@ -188,7 +188,7 @@ def dispatchGrain():
         currentProfit -= currentExpense
     elif flag == 2:
         flag = 0
-        currentExpense += 500
+        currentExpense += taxes * 2
         currentProfit -= currentExpense
 
 ##################################################################################
