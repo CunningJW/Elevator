@@ -105,12 +105,12 @@ def recieveGrain(event):
         print("Error: malfunction in recieving storage!")
     if flag == 1:
         flag = 0
-        currentExpense += 10000 + taxeGrain
-        currentProfit -= currentExpense
+        currentExpense = 10000 + taxeGrain
+        currentProfit -= currentExpense - taxes
     elif flag == 2:
         flag = 0
         currentExpense += taxes * 2
-        currentProfit -= currentExpense
+        currentProfit -= taxes * 2
 
 def cleanGrain():
     global recievedGrain, cleanedGrain, currentProfit, currentExpense, currentIncome, flag, taxeGrain, taxes
@@ -133,17 +133,14 @@ def cleanGrain():
     if flag == 1:
         flag = 0
         currentExpense += 10000 + taxeGrain
-        currentProfit -= currentExpense
+        currentProfit -= currentExpense - taxes
     elif flag == 2:
         flag = 0
         currentExpense += taxes * 2
-        currentProfit -= currentExpense
+        currentProfit -= taxes * 2
 
 def desinfectGrain():
     global cleanedGrain, goodGrain, badGrain, currentProfit, currentExpense, currentIncome, flag, taxeGrain, taxes
-    currentIncome = 0
-    currentExpense = taxes
-    currentProfit = currentIncome - currentExpense
     if malfunctions['desinfecting'] == False:
         currentDesinfected = min(500,cleanedGrain)
         badPart = currentDesinfected * round(random.uniform(0.01,0.05),3)  #в процессе может отсеятся от 1.0% до 5.0% зерна
@@ -157,6 +154,7 @@ def desinfectGrain():
             fillBox(elevatorCanvas, cleaningGrainBox, math.floor(cleanedGrain / MAX_CAPACITY * 100))
             fillBox(elevatorCanvas, goodGrainBox, math.floor(goodGrain / MAX_CAPACITY * 100))
             fillBox(elevatorCanvas, badGrainBox, math.floor(badGrain / 500 * 100))
+
         elif (goodGrain + currentDesinfected - badPart > MAX_CAPACITY):
             print("Error: no more place to storage desinfected grain")
         if (badGrain + badPart > 500):
@@ -166,30 +164,28 @@ def desinfectGrain():
     if flag == 1:
         flag = 0
         currentExpense += 10000 + taxeGrain
-        currentProfit -= currentExpense
+        currentProfit -= currentExpense - taxes
     elif flag == 2:
         flag = 0
         currentExpense += taxes * 2
-        currentProfit -= currentExpense
+        currentProfit -= taxes * 2
+
 def dispatchGrain():
     global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag, taxeGrain, taxes
-    currentIncome = 0
-    currentExpense = taxes
-    currentProfit = currentIncome - currentExpense
     if malfunctions['dispatching'] == False:
         currentDispatched = min(goodGrain,exportAmount)
         goodGrain -= currentDispatched
-        currentIncome = currentDispatched * grainKgCost
-        currentExpense = taxes
-        currentProfit = currentIncome - currentExpense
+        currentIncome += currentDispatched * grainKgCost
+        currentProfit += currentIncome
     if flag == 1:
         flag = 0
         currentExpense += 10000 + taxeGrain
-        currentProfit -= currentExpense
+        currentProfit -= currentExpense - taxes
     elif flag == 2:
         flag = 0
         currentExpense += taxes * 2
-        currentProfit -= currentExpense
+        currentProfit -= taxes * 2
+
 
 ##################################################################################
 
@@ -248,7 +244,7 @@ def fillBox(can, box, percent):   #Нужно указать канвас в к�
         can.coords(massivBox[j],coordsBox) #
 
 def clearBadBox(event):
-    global totalExpense, badGrain, currentExpense, currentProfit, flag, taxeGrain
+    global totalExpense, badGrain, flag, taxeGrain
     blinkArrow(elevatorCanvas, [badGrainArrowToExport], "green")
     flag = 1
     taxeGrain = badGrain
@@ -464,7 +460,7 @@ repairingDispatchingButton.pack(side = 'right')
 repairingDispatchingButton.bind(sequence = "<Button-1>", func = repairingDispatching)
 
 canStopSystemButton = Canvas(window, width = 200, height = 300, bg = "snow", highlightthickness = 0)
-canStopSystemButton.place(x = 1300, y = 125)
+canStopSystemButton.place(x = 1320, y = 135)
 
 stopSystemButton = Button(canStopSystemButton, text = 'System \n Stop', width = 10, height = 2, bg = "red",foreground = "white")
 stopSystemButton.pack(side = 'bottom')
@@ -481,6 +477,7 @@ def progress():
         if currentStage == STAGE_CLEANING:
             iters += 1
             cleanGrain()
+            print(currentExpense)
             getStats()
 
             if (recievedGrain != 0):
@@ -489,10 +486,12 @@ def progress():
                 else:
                     blinkArrow(elevatorCanvas, [getToCleanArrow], "red")
             currentStage+=1
+            print(currentExpense)
             elevatorCanvas.after(INTERVAL,progress)
 
         elif currentStage == STAGE_DESINFECTING:
             desinfectGrain()
+            print(currentExpense)
             getStats()
             if (cleanedGrain != 0):
                 if malfunctions['desinfecting'] == False:
@@ -503,27 +502,37 @@ def progress():
                                                 desinfectionToBadGrainArrow], "red")
             if iters % DISPATCH_DELAY == 0:                                 #когда проходит нужное количество дней до отправки
                 currentStage+=1
+                print(currentExpense)
                 elevatorCanvas.after(INTERVAL,progress)
             else:                                                           #иначе начинаем новый цикл сразу
                 currentStage = STAGE_CLEANING
+                print(currentExpense)
+                totalIncome += currentIncome
+                totalExpense += currentExpense
+                totalProfit += currentProfit
                 profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, round(goodGrain, 1) , round(badGrain, 1)])
                 elevatorCanvas.after(INTERVAL,progress)
 
 
         elif currentStage == STAGE_DISPATCHING:
             dispatchGrain()
+            print(currentExpense)
             getStats()
             if malfunctions['dispatching'] == False:
                 blinkArrow(elevatorCanvas, [goodGrainArrowToExport], "green")
             else:
                 blinkArrow(elevatorCanvas, [goodGrainArrowToExport], "red")
             currentStage = STAGE_CLEANING
+            totalIncome += currentIncome
+            totalExpense += currentExpense
+            totalProfit += currentProfit
             profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, round(goodGrain, 1), round(badGrain, 1)])
+            print(currentExpense)
             elevatorCanvas.after(INTERVAL,progress)
 
-        totalIncome += currentIncome
-        totalExpense += currentExpense
-        totalProfit += currentProfit
+        # totalIncome += currentIncome
+        # totalExpense += currentExpense
+        # totalProfit += currentProfit
 
 
 
@@ -542,10 +551,10 @@ def progress():
         totalIncomeText.config(text = 'Total Income = ' + str(totalIncome) + '$')
         totalExpenceText.config(text = 'Total Expense = ' + str(totalExpense) + '$')
         totalProfitText.config(text = 'Total Profit = ' + str(totalProfit) + '$')
-
-        print(totalIncome)
-        print(totalExpense)
-        print(totalProfit)
+        #
+        # print(totalIncome)
+        # print(totalExpense)
+        # print(totalProfit)
 
         timeGoodExportText.config(text = "Через {0} дн.".format(str(abs(iters % DISPATCH_DELAY % (-1*DISPATCH_DELAY)))))
         print()
