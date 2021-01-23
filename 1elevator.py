@@ -28,6 +28,7 @@ badGrain = 0
 
 iters = 0
 
+flag = 0
 
 malfunctions = {'recieving': False,
                 'cleaning': False,
@@ -38,8 +39,15 @@ malfunctions = {'recieving': False,
 totalIncome = 0   #доходы
 totalExpense = 0  #расходы
 totalProfit = 0   #прибыль
-kek = [[0.0,0.0]]
 
+currentIncome = 0   #текущие доходы
+currentExpense = 0  #текущие расходы
+currentProfit = 0   #текущая прибыль
+
+taxes = 1000 #плата за обслуживание
+
+kek = [[0.0,0.0]]
+profitTable = [ ['','','','','','','',''] for i in range(10) ]
 
 blinkInterval = 200
 
@@ -49,10 +57,14 @@ window.resizable(0, 0)
 
 
 
-fig = plt.figure(figsize = (5,4),frameon = False)
+fig = plt.figure(figsize = (4,4),frameon = False)
 fig.patch.set_facecolor('snow')
 ax1 = fig.add_subplot(1, 1, 1)
 
+tableFig = plt.figure(figsize = (8,4),frameon = False)
+tableFig.patch.set_facecolor('snow')
+tableFig.patch.set_visible(False)
+ax2 = tableFig.add_subplot()
 
 ######################################Funcs#######################################
 
@@ -74,9 +86,17 @@ def getStats():
     print("Cleaned grain: ",cleanedGrain)
     print("Good grain: ",goodGrain)
     print("Bad grain: ",badGrain)
+    print("")
 
 def recieveGrain(event):
-    global recievedGrain
+    global recievedGrain, currentProfit, currentExpense, flag
+    currentIncome = 0
+    currentExpense = taxes
+    currentProfit = currentIncome - currentExpense
+    if flag == 1:
+        flag = 0
+        currentExpense += 10000 + badGrain
+        currentProfit -= currentExpense
     if malfunctions['recieving'] == False:
         currentRecieved = 1000
         if (recievedGrain + currentRecieved < MAX_CAPACITY):
@@ -89,7 +109,14 @@ def recieveGrain(event):
         print("Error: malfunction in recieving storage!")
 
 def cleanGrain():
-    global recievedGrain, cleanedGrain
+    global recievedGrain, cleanedGrain, currentProfit, currentExpense, currentIncome, flag
+    currentIncome = 0
+    currentExpense = taxes
+    currentProfit = currentIncome - currentExpense
+    if flag == 1:
+        flag = 0
+        currentExpense += 10000 + badGrain
+        currentProfit -= currentExpense
     if malfunctions['cleaning'] == False:
         currentCleaned = min(600,recievedGrain)
         if (cleanedGrain + currentCleaned < MAX_CAPACITY):
@@ -106,7 +133,14 @@ def cleanGrain():
         print("Error: malfunction in cleaning storage!")
 
 def desinfectGrain():
-    global cleanedGrain, goodGrain, badGrain
+    global cleanedGrain, goodGrain, badGrain, currentProfit, currentExpense, currentIncome, flag
+    currentIncome = 0
+    currentExpense = taxes
+    currentProfit = currentIncome - currentExpense
+    if flag == 1:
+        flag = 0
+        currentExpense += 10000 + badGrain
+        currentProfit -= currentExpense
     if malfunctions['desinfecting'] == False:
         currentDesinfected = min(500,cleanedGrain)
         badPart = currentDesinfected * round(random.uniform(0.01,0.05),3)  #в процессе может отсеятся от 1.0% до 5.0% зерна
@@ -128,11 +162,21 @@ def desinfectGrain():
         print("Error: malfunction in recieving storage!")
 
 def dispatchGrain():
-    global goodGrain, totalIncome, exportAmount
+    global goodGrain, exportAmount, currentProfit, currentExpense, currentIncome, flag
+    if flag == 1:
+        currentExpense = 10000 + badGrain
+        currentProfit = currentExpense
+    else:
+        currentIncome = 0
+        currentExpense = 0
+        currentProfit = 0
     if malfunctions['dispatching'] == False:
         currentDispatched = min(goodGrain,exportAmount)
         goodGrain -= currentDispatched
-        totalIncome += currentDispatched * grainKgCost
+        currentIncome += currentDispatched * grainKgCost
+        currentExpense += taxes
+        currentProfit += currentIncome - currentExpense
+
 ##################################################################################
 
 # Смещение стрелочки по x и y #
@@ -190,9 +234,9 @@ def fillBox(can, box, percent):   #Нужно указать канвас в к�
         can.coords(massivBox[j],coordsBox) #
 
 def clearBadBox(event):
-    global totalExpense, badGrain
+    global totalExpense, badGrain, currentExpense, currentProfit, flag
     blinkArrow(elevatorCanvas, [badGrainArrowToExport], "green")
-    totalExpense += 10000 + badGrain
+    flag = 1
     badGrain = 0
     fillBox(elevatorCanvas, badGrainBox, 0)
 
@@ -212,6 +256,19 @@ arrowCoordinates = [
                     135, 160,
                     105, 160,
                              ]
+
+canvasLabel = Canvas(window, width = 150, height = 150, bg = 'snow')
+
+totalIncomeText = Label(canvasLabel, text = currentIncome, font=("arial", 10), bg="snow", anchor = "w", width=30)
+totalExpenceText = Label(canvasLabel, text = currentExpense, font=("arial", 10), bg="snow", anchor = "w", width=30)
+totalProfitText = Label(canvasLabel, text = currentProfit, font=("arial", 10), bg="snow", anchor = "w", width=30)
+
+
+totalIncomeText.grid(row = 0,column = 0)
+totalExpenceText.grid(row = 1,column = 0)
+totalProfitText.grid(row = 2,column = 0)
+
+canvasLabel.place(x = 10, y = 10)
 
 elevatorCanvas = Canvas(window, width = 780, height = 300, bg = "snow", highlightthickness = 0)
 elevatorCanvas.place(x = 500, y = 0)
@@ -283,12 +340,12 @@ badExportButton.bind(sequence = "<Button-1>", func = clearBadBox)
 
 #################################################################################
 
-################################ График #########################################
+################################ График и таблица #########################################
 
 def drawGraph(kek):
     xs = []
     ys = []
-    for line in kek:
+    for line in kek[:len(kek) - 1]:
         xs.append(line[0])
         ys.append(line[1])
 
@@ -301,6 +358,17 @@ def drawGraph(kek):
 
     fig.canvas.draw()
 
+def drawTable(profitTable):
+    ax2.clear()
+    ax2.table(cellText = profitTable[::-1],
+              colLabels = ['Days','Income($)','Expense($)','Profit($)','Recieved Grain', 'Cleaned Grain', 'Good Grain', 'Bad Grain'],
+              loc='center',
+              bbox=[0,0,1.1,1.1],
+              colWidths = [0.3,0.5,0.5,0.4,0.7,0.7,0.6,0.6],
+              )
+    ax2.axis('off')
+    ax2.axis('tight')
+    tableFig.canvas.draw()
 #################################################################################
 
 ################################ Кнопки #########################################
@@ -338,12 +406,10 @@ def progress():
                                         disinfectionToBadGrainArrow], "green")
         if iters % DISPATCH_DELAY == 0:                                 #когда проходит нужное количество дней до отправки
             currentStage+=1
-            print(kek)                                          #сначала отправляем зерно, а потом начинаем новый цикл
-            drawGraph(kek)
             elevatorCanvas.after(INTERVAL,progress)
         else:                                                           #иначе начинаем новый цикл сразу
             currentStage = STAGE_CLEANING
-            drawGraph(kek)
+            profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, goodGrain, badGrain])
             elevatorCanvas.after(INTERVAL,progress)
 
 
@@ -352,20 +418,30 @@ def progress():
         getStats()
         blinkArrow(elevatorCanvas, [goodGrainArrowToExport], "green")
         currentStage = STAGE_CLEANING
+        profitTable.append([iters, currentIncome, currentExpense, currentProfit, recievedGrain, cleanedGrain, goodGrain, badGrain])
         elevatorCanvas.after(INTERVAL,progress)
 
+    totalIncome += currentIncome
+    totalExpense += currentExpense
+    totalProfit += currentProfit
 
 
-    totalExpense += 500
-    totalProfit = totalIncome - totalExpense
 
-    if (iters == kek[(len(kek)-1)][0]):
-        kek[(len(kek) - 1)] = [iters,totalProfit]
+    if (iters == kek[(len(kek)) - 1][0]):
+        kek[(len(kek)) - 1] = [iters,totalProfit]
     else:
         kek.append([iters,totalProfit])
 
-    if len(kek) > 15:               #максимальный размер массива
-        del kek[0]
+        if len(kek) > 15:               #максимальный размер массива
+            del kek[0]
+        if len(profitTable) > 10:       #максимальный размер таблицы
+            del profitTable[0]
+        drawGraph(kek)
+        drawTable(profitTable)
+
+    totalIncomeText.config(text = 'Total Income = ' + str(totalIncome) + '$')
+    totalExpenceText.config(text = 'Total Expense = ' + str(totalExpense) + '$')
+    totalProfitText.config(text = 'Total Profit = ' + str(totalProfit) + '$')
 
     print(totalIncome)
     print(totalExpense)
@@ -375,11 +451,17 @@ def progress():
     print()
 ##################################################################################
 
-canGraph = Canvas(window, width = 800, height = 600)
-canGraph.place(x = 780, y = 300)
+canGraph = Canvas(window, width = 780, height = 600)
+canGraph.place(x = 880, y = 300)
 canvasGraph = FigureCanvasTkAgg(fig, canGraph)
 canvasGraph.get_tk_widget().config(bg = 'snow')
 canvasGraph.get_tk_widget().grid(column=0,row=0)
+
+canTable = Canvas(window, width = 100, height = 600)
+canTable.place(x = 0, y = 300)
+canvasTable = FigureCanvasTkAgg(tableFig, canTable)
+canvasTable.get_tk_widget().config(bg = 'snow')
+canvasTable.get_tk_widget().grid(column=0, row=0, sticky='nsew')
 
 elevatorCanvas.after(0,progress)
 window.geometry('1280x720')
